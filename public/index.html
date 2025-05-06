@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskJeeva - AI Browser</title>
+    <style>
+        body {
+            background: radial-gradient(circle, #001a33, #000);
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            height: 100%;
+            overflow-y: auto;
+            margin: 0;
+            padding: 0;
+justify-content: flex-start;
+overflow-x: hidden;
+        }
+        .container {
+    position: absolute;
+    top: 60px; /* Push it below the tab bar */
+    left: 0;
+    width: 100%; /* Ensure it spans the full width */
+    min-height: calc(100vh - 60px);
+    padding: 20px;
+    box-sizing: border-box;
+}
+#searchEngine {
+    width: 80%;
+    padding: 12px;
+    font-size: 18px;
+    border-radius: 25px;
+    border: 2px solid #00ccff;
+    outline: none;
+    text-align: center;
+    background: linear-gradient(45deg, #00ccff, #0066ff); /* Same gradient effect */
+    color: white;
+    box-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff; /* Glowing effect */
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+    appearance: none; /* Removes default dropdown styling */
+}
+
+/* When hovering over the dropdown */
+#searchEngine:hover {
+    background: linear-gradient(45deg, #0066ff, #00ccff);
+    box-shadow: 0 0 15px #00ccff;
+}
+
+/* Style the dropdown arrow */
+#searchEngine::after {
+    content: '▼';
+    color: white;
+    position: absolute;
+    right: 15px;
+    pointer-events: none;
+}
+
+/* Dropdown options styling */
+#searchEngine option {
+    background: #002244;
+    color: white;
+}
+
+.theme-toggle-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.theme-toggle-btn {
+    background: #003366;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px #00ccff;
+    transition: 0.3s;
+}
+
+.theme-toggle-btn:hover {
+    background: #00ccff;
+    color: black;
+}
+/* Light Theme */
+.light-theme {
+    background: #ffffff;
+    color: #000000;
+}
+
+.light-theme .tab-bar,
+.light-theme .panel,
+.light-theme .theme-toggle-btn {
+    background: #dddddd;
+    color: black;
+    box-shadow: 0 0 10px gray;
+}
+
+/* Custom Theme */
+.custom-theme {
+    background: radial-gradient(circle, #4b0082, #800080);
+    color: #ffccff;
+}
+
+.custom-theme .tab-bar,
+.custom-theme .panel,
+.custom-theme .theme-toggle-btn {
+    background: #660066;
+    color: white;
+    box-shadow: 0 0 10px #ff99ff;
+}
+        .semi-circle {
+            width: 200px;
+            height: 100px;
+            border-radius: 100px 100px 0 0;
+            background: linear-gradient(45deg, #00ccff, #0066ff);
+            box-shadow: 0 0 20px #00ccff, 0 0 40px #00ccff, 0 0 60px #00ccff;
+            margin: auto;
+        }
+        .title {
+            font-size: 50px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff;
+            margin-top: 20px;
+        }
+        .tab-bar {
+            display: flex;
+            justify-content: end;
+            background: #002244;
+            padding: 5px;
+            box-shadow: 0 0 10px #00ccff;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .tab-container {
+            display: flex;
+        }
+        .tab {
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: #003366;
+            cursor: pointer;
+            margin: 2px;
+            transition: 0.3s;
+            box-shadow: 0 0 10px #00ccff;
+        }
+        .tab:hover, .active-tab {
+            background: #00ccff;
+            color: #000;
+        }
+        .new-tab {
+            background: #0055aa;
+            color: white;
+        }
+        .menu {
+            position: relative;
+            display: inline-block;
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+        /* Hide the default file input */
+input[type="file"] {
+    display: none;
+}
+
+/* Neon-styled custom file upload button */
+.neon-file-btn {
+    display: inline-block;
+    padding: 12px 30px;
+    font-size: 16px;
+    color: white;
+    background: transparent;
+    border: 2px solid #00ccff;
+    border-radius: 25px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.3s;
+    box-shadow: 0 0 15px #00ccff, 0 0 25px #00ccff, 0 0 35px #00ccff;
+}
+
+/* Glow effect on hover */
+.neon-file-btn:hover {
+    background: linear-gradient(45deg, #00ccff, #0066ff);
+    box-shadow: 0 0 20px #00ccff, 0 0 40px #00ccff, 0 0 60px #00ccff;
+    color: #fff;
+}
+
+        .menu-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: #002244;
+    box-shadow: 0 0 10px #00ccff;
+    border-radius: 5px;
+    min-width: 150px;
+    z-index: 1000; /* Ensures it appears on top */
+    overflow: visible; /* Prevents hidden items */
+}
+
+.menu-content a {
+    color: white;
+    padding: 10px;
+    display: block;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-content a:hover {
+    background: #00ccff;
+    color: black;
+}
+        .panel-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .panel {
+            width: 45%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 10px #00ccff;
+            min-height: 200px;
+        }
+        .search-container {
+            width: 50%;
+            margin: 20px auto;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 10px #00ccff;
+        }
+        .search-box, .web-search-box {
+            width: 80%;
+            padding: 12px;
+            font-size: 18px;
+            border-radius: 25px;
+            border: 2px solid #00ccff;
+            outline: none;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            box-shadow: 0 0 10px #00ccff;
+            margin-bottom: 10px;
+        }
+        .search-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(45deg, #00ccff, #0066ff);
+            color: white;
+            cursor: pointer;
+            transition: 0.3s ease-in-out;
+            box-shadow: 0 0 15px #00ccff;
+        }
+        .search-btn:hover {
+            background: linear-gradient(45deg, #0066ff, #00ccff);
+            box-shadow: 0 0 25px #00ccff;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Tab System -->
+    <div class="tab-bar">
+        <div class="tab-container" id="tabBar">
+            <div class="tab active-tab" onclick="switchTab(0)">Tab 1</div>
+            <div class="tab new-tab" onclick="addTab()">+</div>
+        </div>
+
+        
+<div class="menu">
+    <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+    <div class="menu-content" id="menuContent">
+        <a href="#" onclick="window.print()">Print Page</a>
+        <a href="https://accounts.google.com" target="_blank">Google Sign-In</a>
+        <a href="chrome://extensions/" target="_blank">Extensions</a>
+        <a href="#" onclick="openPrivateWindow()">Private Window</a>
+    </div>
+</div>
+<div class="theme-toggle-container">
+    <button class="theme-toggle-btn" onclick="toggleTheme()">🌗</button>
+</div>
+
+
+<script>
+function toggleMenu(event) {
+    event.stopPropagation(); // Prevents event bubbling
+    const menu = document.getElementById("menuContent");
+    menu.style.display = (menu.style.display === "block") ? "none" : "block";
+}
+
+// Close the menu when clicking outside
+document.addEventListener("click", function(event) {
+    const menu = document.getElementById("menuContent");
+    const button = document.querySelector(".menu-btn");
+
+    if (menu.style.display === "block" && !menu.contains(event.target) && !button.contains(event.target)) {
+        menu.style.display = "none";
+    }
+});
+
+// Ensure clicks inside the menu don't close it prematurely
+document.getElementById("menuContent").addEventListener("click", function(event) {
+    event.stopPropagation(); // Prevents closing when clicking on menu items
+});
+
+// Handle menu item clicks properly
+// Handle menu item clicks properly
+document.querySelectorAll("#menuContent a").forEach(item => {
+    item.addEventListener("click", function(event) {
+        menu.style.display = "none"; // Close the menu
+
+        // Get the link's href attribute
+        let link = this.getAttribute("href");
+
+        // Check if it's not "#" (used for actions like private mode)
+        if (link !== "#") {
+            window.open(link, "_blank"); // Open in new tab
+        }
+    });
+});
+
+
+
+
+        function openExtensions() {
+            window.open("chrome://extensions/", "_blank");
+        }
+
+        function printPage() {
+            window.print();
+        }
+
+        function googleSignIn() {
+            window.location.href = "https://accounts.google.com/signin";
+        }
+
+        function openPrivateWindow() {
+            window.open("about:privatebrowsing", "_blank");
+        }
+
+        document.addEventListener("click", function(event) {
+            const menu = document.getElementById("menuDropdown");
+            if (!event.target.closest(".menu-container")) {
+                menu.style.display = "none";
+            }
+        });
+let themes = ["dark", "light", "custom"];
+let currentThemeIndex = 0;
+
+function applyTheme(theme) {
+    document.body.classList.remove("light-theme", "custom-theme");
+
+    if (theme === "light") {
+        document.body.classList.add("light-theme");
+    } else if (theme === "custom") {
+        document.body.classList.add("custom-theme");
+    }
+
+    localStorage.setItem("theme", theme); // Save theme preference
+}
+
+function toggleTheme() {
+    currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+    let selectedTheme = themes[currentThemeIndex];
+    applyTheme(selectedTheme);
+}
+
+// Load saved theme on page load
+document.addEventListener("DOMContentLoaded", () => {
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    currentThemeIndex = themes.indexOf(savedTheme);
+    applyTheme(savedTheme);
+});
+
+</script>
+
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="tabsContainer">
+        <div class="container" id="tab-0">
+            <div class="semi-circle"></div>  
+            <h1 class="title">AskJeeva</h1>
+
+            <!-- Web Search inside a separate container -->
+            <div class="search-container">
+                <h2>Web Search</h2>
+                <select id="searchEngine">
+                    <option value="https://www.google.com/search?q=">Google</option>
+                    <option value="https://www.bing.com/search?q=">Bing</option>
+                    <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+                </select>
+                <br><br>
+                <input type="text" class="web-search-box" id="webSearchInput" placeholder="Search the Web...">
+                <br>
+                <button class="search-btn" onclick="performWebSearch(0)">Search</button>
+            </div>
+
+            <div class="panel-container">
+                <!-- AI Search Panel -->
+                <div class="panel">
+                    <h2>AI Search</h2>
+                    <input type="text" class="search-box" id="searchInput-0" placeholder="Ask AI...">
+                    <br>
+                    <button class="search-btn" onclick="searchAI(0)">Search</button>
+                    <div id="aiResponse-0"></div>
+                </div>
+
+                <!-- History Panel -->
+                <div class="panel">
+                    <h2>Search History</h2>
+                    <ul id="historyList-0"></ul>
+                </div>
+
+<!-- Video Upload Section -->
+<!-- Video Upload Section -->
+<div class="panel">
+    <h2>Video Search (AskJeeva Lens)</h2>
+    <form id="video-upload-form" enctype="multipart/form-data" onsubmit="return false;">  <!-- Prevent default form submission -->
+        <label for="video-input" class="neon-file-btn">Choose File</label>
+        <input type="file" id="video-input" name="video" accept="video/*" required>
+        <button type="submit" class="search-btn">Analyze & Search</button> 
+    </form>
+    <video id="video-preview" controls width="100%" style="display:none;"></video>
+    <div id="video-summary" style="display: none;"></div>
+
+
+</div>
+
+<!-- Add the JavaScript -->
+<script src="render.js"></script>
+
+<script>
+function uploadVideo() {
+    const videoInput = document.getElementById('videoInput');
+    const summaryDiv = document.getElementById("videoSummary");
+    const similarVideosList = document.getElementById("similarVideos");
+
+    if (!videoInput.files.length) {
+        alert('Please select a video file.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('video', videoInput.files[0]);
+
+    // Display video preview
+    const videoPreview = document.getElementById('videoPreview');
+    const url = URL.createObjectURL(videoInput.files[0]);
+    videoPreview.src = url;
+
+    // Clear previous results
+    summaryDiv.innerHTML = "<p>Analyzing video...</p>";
+    similarVideosList.innerHTML = "";
+
+    // Send the video to the server
+    fetch('http://localhost:3000/analyze-video', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Video Summary:", data.summary);
+        summaryDiv.innerHTML = `<p><strong>Summary:</strong> ${data.summary}</p>`;
+
+        // Display similar videos
+        const searchQuery = encodeURIComponent(data.summary);
+        const searchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+
+        const resultItem = document.createElement("li");
+        resultItem.innerHTML = `<a href="${searchUrl}" target="_blank">View Similar Videos</a>`;
+        similarVideosList.appendChild(resultItem);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Error analyzing video.");
+    });
+}
+</script>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tabCount = 1;
+
+        function addTab() {
+            const tabId = tabCount++;
+            const tabBar = document.getElementById("tabBar");
+
+            let newTab = document.createElement("div");
+            newTab.classList.add("tab");
+            newTab.innerText = `Tab ${tabId + 1}`;
+            newTab.onclick = () => switchTab(tabId);
+            tabBar.insertBefore(newTab, tabBar.lastElementChild);
+
+            let tabContent = document.createElement("div");
+            tabContent.classList.add("container");
+            tabContent.id = `tab-${tabId}`;
+            tabContent.innerHTML = document.getElementById("tab-0").innerHTML;
+let bookmarksPanel = tabContent.querySelector(".panel h2:nth-of-type(3)")?.parentNode;
+if (bookmarksPanel) bookmarksPanel.remove();
+// Update search buttons to reference the correct tab ID
+tabContent.querySelector(".search-btn").setAttribute("onclick", `performWebSearch(${tabId})`);
+tabContent.querySelector(".panel .search-btn").setAttribute("onclick", `searchAI(${tabId})`);
+
+            document.getElementById("tabsContainer").appendChild(tabContent);
+            switchTab(tabId);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll(".tab-content .container").forEach(div => div.style.display = "none");
+            document.getElementById(`tab-${tabId}`).style.display = "block";
+        }
+        let aiSearchHistory = JSON.parse(localStorage.getItem("aiSearchHistory")) || [];
+    let webSearchHistory = JSON.parse(localStorage.getItem("webSearchHistory")) || [];
+
+    // Function to update history UI across all tabs
+function updateHistoryUI() {
+    document.querySelectorAll("ul[id^='historyList']").forEach(ul => {
+        ul.innerHTML = ""; // Clear old history
+
+        // AI search history
+        aiSearchHistory.forEach(query => {
+            let li = document.createElement("li");
+            li.innerHTML = `<strong>[AI Search]</strong> ${query}`;
+            ul.appendChild(li);
+        });
+
+        // Web search history
+        webSearchHistory.forEach(query => {
+            let li = document.createElement("li");
+            li.innerHTML = `<strong>[Web Search]</strong> ${query}`;
+            ul.appendChild(li);
+        });
+    });
+}
+
+    // Function to perform AI search and store history without duplicates
+    function searchAI(tabId) {
+        const input = document.getElementById(`searchInput-${tabId}`).value.trim();
+        if (input && !aiSearchHistory.includes(input)) {  // Prevent duplicates
+            aiSearchHistory.push(input);
+            localStorage.setItem("aiSearchHistory", JSON.stringify(aiSearchHistory));
+            updateHistoryUI();
+        }
+    }
+
+    function performWebSearch(tabId) {
+    const searchBox = document.querySelector(`#tab-${tabId} .web-search-box`);
+    if (!searchBox) return; // Ensure input exists
+
+    const query = searchBox.value.trim();
+    if (query === "") return;
+
+    const engine = document.querySelector(`#tab-${tabId} #searchEngine`).value;
+    window.open(engine + encodeURIComponent(query), "_blank");
+
+    // Save to web search history
+    webSearchHistory.push(query);
+    localStorage.setItem("webSearchHistory", JSON.stringify(webSearchHistory));
+
+    // Update history across all tabs
+    updateHistoryUI();
+}
+
+    // Load and update history when the page loads
+    document.addEventListener("DOMContentLoaded", updateHistoryUI);
+
+    // Load and update history when the page loads
+    document.addEventListener("DOMContentLoaded", updateHistoryUI);
+
+// Clear search history when the user leaves the site
+window.addEventListener("beforeunload", function () {
+    localStorage.removeItem("aiSearchHistory");
+    localStorage.removeItem("webSearchHistory");
+});
+
+
+        function toggleMenu() {
+            const menu = document.getElementById("menuContent");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+        function openPrivateWindow() {
+    alert("Private browsing mode is not directly accessible via JavaScript. Open an incognito window manually.");
+}
+function processVideo() {
+    let file = document.getElementById("videoUpload").files[0];
+    if (!file) {
+        alert("Please upload a video.");
+        return;
+    }
+
+    let video = document.getElementById("videoPreview");
+    video.src = URL.createObjectURL(file);
+    video.load();
+
+    video.onloadedmetadata = () => {
+        if (video.duration > 20) {
+            video.currentTime = 20; // Move to 20th second for processing
+        } else {
+            video.currentTime = video.duration; // Process entire video if shorter than 20 seconds
+        }
+    };
+
+    video.onseeked = () => {
+        extractKeyFrames(video);
+        extractAudio(video);
+    };
+}
+
+function extractKeyFrames(video) {
+    let canvas = document.createElement("canvas");
+    let ctx = canvas.getContext("2d");
+    let frames = [];
+    
+    let captureFrame = (time) => {
+        video.currentTime = time;
+        setTimeout(() => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            frames.push(canvas.toDataURL("image/png"));
+        }, 200);
+    };
+
+    for (let i = 0; i <= 20; i += 5) { // Capture every 5 seconds
+        captureFrame(i);
+    }
+
+    setTimeout(() => {
+        analyzeFrames(frames);
+    }, 5000);
+}
+
+function extractAudio(video) {
+    let audioContext = new AudioContext();
+    let mediaRecorder = new MediaRecorder(video.captureStream());
+    
+    let audioChunks = [];
+    mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+        let audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+        analyzeAudio(audioBlob);
+    };
+
+    mediaRecorder.start();
+    setTimeout(() => mediaRecorder.stop(), 20000); // Record first 20 seconds
+}
+function analyzeFrames(frames) {
+    let summaryText = "Extracting key points from the video..."; // Placeholder for AI processing
+    document.getElementById("videoSummary").innerHTML = `<p><strong>Summary:</strong> ${summaryText}</p>`;
+    searchSimilarVideos(summaryText);
+}
+
+function analyzeAudio(audioBlob) {
+    // Convert audioBlob to text (use AI API or Speech-to-Text)
+    let audioText = "Sample audio transcription from the video.";
+    document.getElementById("videoSummary").innerHTML += `<p><strong>Audio Transcription:</strong> ${audioText}</p>`;
+}
+function searchSimilarVideos(summary) {
+    let searchQuery = encodeURIComponent(summary);
+    let searchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+
+    let resultItem = document.createElement("li");
+    resultItem.innerHTML = `<a href="${searchUrl}" target="_blank">Find Similar Videos</a>`;
+    
+    document.getElementById("similarVideos").appendChild(resultItem);
+}
+function processVideo() {
+    const fileInput = document.getElementById("videoUpload");
+    const videoPreview = document.getElementById("videoPreview");
+    const summaryDiv = document.getElementById("videoSummary");
+    const similarVideosList = document.getElementById("similarVideos");
+
+    if (!fileInput.files.length) {
+        alert("Please upload a video first.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const url = URL.createObjectURL(file);
+    videoPreview.src = url;
+
+    summaryDiv.innerHTML = "<p>Analyzing video...</p>";
+
+    // Simulate AI processing
+    setTimeout(() => {
+        // Simulated AI-generated summary
+        const summary = "This video contains content related to technology and AI advancements.";
+        summaryDiv.innerHTML = `<p><strong>Summary:</strong> ${summary}</p>`;
+
+        // Perform a Google search for similar videos
+        const searchQuery = encodeURIComponent(summary);
+        fetchSimilarVideos(searchQuery);
+
+    }, 3000);
+}
+
+function fetchSimilarVideos(query) {
+    const similarVideosList = document.getElementById("similarVideos");
+    similarVideosList.innerHTML = "<p>Fetching similar videos...</p>";
+
+    const searchUrl = `https://www.google.com/search?q=${query}+site%3Ayoutube.com`;
+    
+    setTimeout(() => {
+        similarVideosList.innerHTML = `
+            <li><a href="${searchUrl}" target="_blank">View Similar Videos on YouTube</a></li>
+        `;
+    }, 2000);
+}
+
+
+function uploadVideo() {
+            const videoInput = document.getElementById('videoInput');
+            if (videoInput.files.length === 0) {
+                alert('Please select a video file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', videoInput.files[0]);  // Append the uploaded video
+
+            // Send the video to the server
+            fetch('http://localhost:3000/analyze-video', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(summary => {
+                console.log("Video Summary:", summary);
+                alert(`Summary: ${summary}`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Error analyzing video");
+            });
+        }
+        // Function to perform AI search and display results
+async function searchAI(tabId) {
+    const inputElement = document.getElementById(`searchInput-${tabId}`);
+    const query = inputElement.value.trim();
+    
+    if (!query) {
+        alert('Please enter a search query.');
+        return;
+    }
+
+    const responseDiv = document.getElementById(`aiResponse-${tabId}`);
+    responseDiv.innerHTML = `<p>Loading...</p>`;  // Show loading message
+
+    try {
+        const response = await fetch(`http://localhost:3000/search?query=${encodeURIComponent(query)}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch AI response');
+        }
+
+        const data = await response.json();
+        console.log("AI Search Result:", data);
+
+        // ✅ Display the AI response in the panel
+        responseDiv.innerHTML = `<p><strong>Answer:</strong> ${data.answer}</p>`;
+
+        // ✅ Store the query in history
+        if (!aiSearchHistory.includes(query)) {
+            aiSearchHistory.push(query);
+            localStorage.setItem("aiSearchHistory", JSON.stringify(aiSearchHistory));
+            updateHistoryUI();
+        }
+
+    } catch (error) {
+        console.error("Error during AI search:", error);
+        responseDiv.innerHTML = `<p>Error retrieving AI response.</p>`;
+    }
+}
+
+    
+    </script>
+
+</body>
+</html>
